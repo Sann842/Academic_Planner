@@ -11,8 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory of the project (used to build paths)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -37,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'api.calendar_app',
+    'rest_framework', # Django REST Framework
+    'corsheaders', # Handle CORS (Cross-Origin Requests)
+    'api.calendar_app', # Custom calendar app
 ]
 
 MIDDLEWARE = [
@@ -50,9 +52,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # Enable CORS
 ]
 
+# Allow requests from all origins (development only)
 CORS_ALLOW_ALL_ORGINS = True
 
 ROOT_URLCONF = 'core.urls'
@@ -120,27 +123,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-import os
-
 STATIC_URL = '/static/'
+
+# Directory where static files are collected
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-from datetime import timedelta
-
+# REST framework authentication and permission settings
 # for login (only in development, not for production)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication", # allow admin session
         # "rest_framework.authentication.BasicAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication", # JWT auth
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         # "rest_framework.permissions.IsAuthenticated",
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.AllowAny', # Allow all requests
     ],
 }
 
+
+# Token lifetime configuration
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
