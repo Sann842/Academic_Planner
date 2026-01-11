@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-shz8o4r%%s2$s*e*rg^2jlemu=zjl4t9gazsu817y!wak34ob3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["https://academic-planner-jvz3.onrender.com"]
+ALLOWED_HOSTS = []
 
 
 # Application definition

@@ -1,18 +1,22 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsAdminOrReadOnly
 from .models import Holiday, Event, Task
 from .serializers import HolidaySerializer, EventSerializer, TaskSerializer
 
 
 class HolidayViewSet(viewsets.ModelViewSet):
-    queryset = Holiday.objects.all().order_by("date_ad")
+    queryset = Holiday.objects.all().order_by("date_bs")
     serializer_class = HolidaySerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all().order_by("date_ad")
+    queryset = Event.objects.all().order_by("date_bs")
     serializer_class = EventSerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -27,6 +31,7 @@ class EventViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all().order_by("due_date")
     serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
 
     # Update task status
     @action(detail=True, methods=["patch"])
