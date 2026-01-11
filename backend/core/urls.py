@@ -17,17 +17,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from api.calendar_app.views import HolidayViewSet, EventViewSet, TaskViewSet
 
 router = DefaultRouter()
-router.register("holidays", HolidayViewSet)
-router.register("events", EventViewSet)
-router.register("tasks", TaskViewSet)
+router.register("holidays", HolidayViewSet, basename="holiday")
+router.register("events", EventViewSet, basename="event")
+router.register("tasks", TaskViewSet, basename="task")
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # auth
+    path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+
     path('api/', include(router.urls)),
     path('', RedirectView.as_view(url='/api/', permanent=False)),  # <-- redirect root to /api
 ]
