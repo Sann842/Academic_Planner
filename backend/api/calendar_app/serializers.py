@@ -30,3 +30,10 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = "__all__"
+
+
+# TASK STATUS SERIALIZER
+class TaskStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ("title","status",)

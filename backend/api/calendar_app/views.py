@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .permissions import IsAdminManageReadOnly, IsOwnerOrReadOnly, IsTaskOwner
 from .models import Holiday, Event, Task
-from .serializers import HolidaySerializer, EventSerializer, TaskSerializer
+from .serializers import HolidaySerializer, EventSerializer, TaskSerializer, TaskStatusSerializer
 
 
 # HOLIDAY VIEWSET
@@ -56,14 +56,20 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(assigned_to=user).order_by("due_date")
     
     # Update task status only
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["get", "patch"], serializer_class=TaskStatusSerializer)
     def update_status(self, request, pk=None):
         task = self.get_object()
-        # task.status = request.data.get("status", task.status)
-        # task.save()
-        # return Response(TaskSerializer(task).data)
-        serializer = TaskSerializer(task, data=request.data, partial=True)
 
-        serializer.is_valid(raise_exception=True)  # will catch missing fields
+        if request.method == "GET":
+            # Show current status
+            serializer = TaskStatusSerializer(task)
+            return Response(serializer.data)
+
+        # PATCH: update status
+        serializer = TaskStatusSerializer(
+            task, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+
+        return Response(TaskSerializer(task).data)
