@@ -56,7 +56,7 @@ MIDDLEWARE = [
 ]
 
 # Allow requests from all origins (development only)
-CORS_ALLOW_ALL_ORGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'core.urls'
 
