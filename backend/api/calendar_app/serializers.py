@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Holiday, Event, Task
+from django.contrib.auth.models import User
 
 
 # HOLIDAY SERIALIZER
@@ -37,3 +38,23 @@ class TaskStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ("title","status",)
+
+
+# NEW USER LOGIN
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=6)
+
+    class Meta:
+        model = User
+        fields = ("username", "password")
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"]
+        )
+        # IMPORTANT: ensure user is NOT admin
+        user.is_staff = False
+        user.is_superuser = False
+        user.save()
+        return user
