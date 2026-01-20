@@ -1,5 +1,4 @@
-//const API_BASE_URL = "http://127.0.0.1:8000/api";
-const API_BASE_URL = "https://academic-planner-1rjz.onrender.com/api";
+const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 // -------------------------
 // Token management
