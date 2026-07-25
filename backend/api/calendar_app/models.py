@@ -72,9 +72,21 @@ class Task(models.Model):
     # Optional link to an event
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)  # use string with app label
     
-    start_date = models.DateField()
-    due_date = models.DateField()
+    # BS dates entered by the user; AD equivalents computed automatically
+    # (same pattern as Holiday/Event, for consistency across the app)
+    start_date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
+    start_date_ad = models.DateField(editable=False)
+    due_date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
+    due_date_ad = models.DateField(editable=False)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
+    def save(self, *args, **kwargs):
+        validate_bs_date(self.start_date_bs)
+        validate_bs_date(self.due_date_bs)
+        self.start_date_ad = bs_to_ad(self.start_date_bs)
+        self.due_date_ad = bs_to_ad(self.due_date_bs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

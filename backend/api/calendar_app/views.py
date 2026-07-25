@@ -43,7 +43,7 @@ class EventViewSet(viewsets.ModelViewSet):
 # Users can manage tasks assigned to them
 # Admin can view all tasks
 class TaskViewSet(viewsets.ModelViewSet):
-    # queryset = Task.objects.all().order_by("due_date")
+    # queryset = Task.objects.all().order_by("due_date_ad")
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated, IsTaskOwner]
 
@@ -51,9 +51,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         # Admin can see all tasks
         if user.is_staff:
-            return Task.objects.all().order_by("due_date")  
+            return Task.objects.all().order_by("due_date_ad")  
         # Normal users see only tasks assigned to them
-        return Task.objects.filter(assigned_to=user).order_by("due_date")
+        return Task.objects.filter(assigned_to=user).order_by("due_date_ad")
     
     # Update task status only
     @action(detail=True, methods=["get", "patch"], serializer_class=TaskStatusSerializer)

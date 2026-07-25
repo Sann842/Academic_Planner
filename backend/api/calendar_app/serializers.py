@@ -49,6 +49,21 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = "__all__"
+        read_only_fields = ("start_date_ad", "due_date_ad")
+
+    def validate_start_date_bs(self, value):
+        try:
+            validate_bs_date(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages[0])
+        return value
+
+    def validate_due_date_bs(self, value):
+        try:
+            validate_bs_date(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages[0])
+        return value
 
 
 # TASK STATUS SERIALIZER
