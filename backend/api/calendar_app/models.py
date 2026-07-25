@@ -1,12 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .utils.dates import bs_to_ad, ad_to_bs_str
+from .utils.dates import bs_to_ad, ad_to_bs_str, validate_bs_date
 
 
 # HOLIDAY MODEL
 class Holiday(models.Model):
     name = models.CharField(max_length=200)
-    date_bs = models.DateField()
+
+    # Stored as "YYYY-MM-DD" text rather than DateField: Django's DateField
+    # is backed by a real Gregorian date and can't hold valid BS days like
+    # 31 or 32 that don't exist in the same numbered Gregorian month.
+    date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
 
     # Automatically calculated
     date_ad = models.DateField(editable=False)
@@ -14,8 +18,11 @@ class Holiday(models.Model):
     is_public = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        # Convert BS date to AD before saving
-        self.date_ad = bs_to_ad(str(self.date_bs))
+        # Validate then convert BS date to AD before saving. Validating here
+        # (not just in the serializer) keeps bad data out even via the admin
+        # or shell.
+        validate_bs_date(self.date_bs)
+        self.date_ad = bs_to_ad(self.date_bs)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -29,7 +36,7 @@ class Event(models.Model):
     # Optional
     description = models.TextField(blank=True)
 
-    date_bs = models.DateField()
+    date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
 
     # Automatically calculated
     date_ad = models.DateField(editable=False)
@@ -37,8 +44,9 @@ class Event(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="events")
 
     def save(self, *args, **kwargs):
-        # Convert BS -> AD before saving
-        self.date_ad = bs_to_ad(str(self.date_bs))
+        # Validate then convert BS -> AD before saving
+        validate_bs_date(self.date_bs)
+        self.date_ad = bs_to_ad(self.date_bs)
         super().save(*args, **kwargs)
 
     def __str__(self):

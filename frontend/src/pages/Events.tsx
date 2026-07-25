@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { CalendarDays, Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { NepaliDatePicker } from "@/components/NepaliDatePicker";
 
 export default function Events() {
   const { isAuthenticated } = useAuth();
@@ -28,6 +29,7 @@ export default function Events() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [dateBs, setDateBs] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -61,10 +63,15 @@ export default function Events() {
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
+    if (!dateBs) {
+      toast.error("Please select a date");
+      setIsSubmitting(false);
+      return;
+    }
     const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      date_bs: formData.get("date_bs") as string,
+      date_bs: dateBs,
     };
 
     try {
@@ -99,12 +106,14 @@ export default function Events() {
 
   const openEditDialog = (event: Event) => {
     setEditingEvent(event);
+    setDateBs(event.date_bs);
     setIsDialogOpen(true);
   };
 
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingEvent(null);
+    setDateBs("");
   };
 
   if (!isAuthenticated) return null;
@@ -127,7 +136,7 @@ export default function Events() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-accent text-secondary-foreground gap-2 w-full sm:w-auto" onClick={() => setEditingEvent(null)}>
+            <Button className="gradient-accent text-secondary-foreground gap-2 w-full sm:w-auto" onClick={() => { setEditingEvent(null); setDateBs(""); }}>
               <Plus className="w-4 h-4" />
               Add Event
             </Button>
@@ -166,16 +175,12 @@ export default function Events() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="date_bs">Date (BS)</Label>
-                <Input
+                <NepaliDatePicker
                   id="date_bs"
-                  name="date_bs"
-                  type="date"
-                  defaultValue={editingEvent?.date_bs || ""}
-                  required
+                  value={dateBs}
+                  onChange={setDateBs}
+                  placeholder="Select event date (BS)"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Enter date in BS format (e.g., 2081-01-15)
-                </p>
               </div>
               <div className="flex gap-3 pt-4">
                 <Button
@@ -279,7 +284,7 @@ export default function Events() {
             <p className="text-sm md:text-base text-muted-foreground">No events found</p>
             <Button
               className="mt-4 gradient-accent text-secondary-foreground"
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => { setEditingEvent(null); setDateBs(""); setIsDialogOpen(true); }}
             >
               Create your first event
             </Button>

@@ -25,7 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-shz8o4r%%s2$s*e*rg^2jlemu=zjl4t9gazsu817y!wak34ob3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Defaults to False (safe for production/Render) unless DEBUG=True is set
+# in the environment. For local development, export DEBUG=True (or put it
+# in a local .env you load into your shell) before running the server.
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["academic-planner-1rjz.onrender.com",
     "localhost",
@@ -138,9 +141,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # for login (only in development, not for production)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        # JWT listed first: the frontend is JWT-only, and DRF decides whether
+        # an auth failure is reported as 401 (WWW-Authenticate present) or
+        # 403 (no header) based on the FIRST authenticator in this list.
+        # With SessionAuthentication first, invalid/expired JWTs were
+        # surfacing as 403 instead of 401, which silently broke the
+        # frontend's axios/fetch refresh-token interceptor (it only acts on
+        # 401). JWT first fixes that; Session stays enabled for admin use.
+        "rest_framework_simplejwt.authentication.JWTAuthentication", # JWT auth
         "rest_framework.authentication.SessionAuthentication", # allow admin session
         # "rest_framework.authentication.BasicAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication", # JWT auth
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         # "rest_framework.permissions.IsAuthenticated",
