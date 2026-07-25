@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,18 @@ export default function Auth() {
   const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated. This runs as an effect (after render)
+  // rather than during render itself - calling navigate() directly in the
+  // component body triggers React's "Cannot update a component while
+  // rendering a different component" warning, since it updates the router
+  // (a different component) mid-render.
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   if (isAuthenticated) {
-    navigate("/");
     return null;
   }
 

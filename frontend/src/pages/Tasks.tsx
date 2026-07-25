@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { ListTodo, Plus, Search, Edit, Trash2, Loader2, Clock, User } from "lucide-react";
 import { toast } from "sonner";
+import { NepaliDatePicker } from "@/components/NepaliDatePicker";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function Tasks() {
   const { isAuthenticated } = useAuth();
@@ -38,6 +40,9 @@ export default function Tasks() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [startDateBs, setStartDateBs] = useState("");
+  const [dueDateBs, setDueDateBs] = useState("");
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -85,12 +90,24 @@ export default function Tasks() {
 
     const formData = new FormData(e.currentTarget);
     const eventId = formData.get("event") as string;
-    
+
+    if (!startDateBs || !dueDateBs) {
+      toast.error("Please select both a start date and due date");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (dueDateBs < startDateBs) {
+      toast.error("Due date cannot be before the start date");
+      setIsSubmitting(false);
+      return;
+    }
+
     const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      start_date: formData.get("start_date") as string,
-      due_date: formData.get("due_date") as string,
+      start_date_bs: startDateBs,
+      due_date_bs: dueDateBs,
       status: formData.get("status") as string,
       event: eventId && eventId !== "none" ? parseInt(eventId) : undefined,
     };
@@ -113,15 +130,20 @@ export default function Tasks() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+  const handleDelete = (id: number) => {
+    setDeleteTaskId(id);
+  };
 
+  const confirmDelete = async () => {
+    if (deleteTaskId === null) return;
     try {
-      await tasksApi.delete(id);
+      await tasksApi.delete(deleteTaskId);
       toast.success("Task deleted");
       fetchData();
     } catch (error) {
       toast.error("Failed to delete task");
+    } finally {
+      setDeleteTaskId(null);
     }
   };
 
@@ -137,21 +159,33 @@ export default function Tasks() {
 
   const openEditDialog = (task: Task) => {
     setEditingTask(task);
+    setStartDateBs(task.start_date_bs);
+    setDueDateBs(task.due_date_bs);
     setIsDialogOpen(true);
   };
 
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingTask(null);
+    setStartDateBs("");
+    setDueDateBs("");
   };
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: "Pending",
+    in_progress: "In Progress",
+    completed: "Completed",
+  };
+
+  const formatStatus = (status: string) => STATUS_LABELS[status] || status;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
+      case "pending":
         return "bg-secondary text-secondary-foreground";
-      case "In Progress":
+      case "in_progress":
         return "gradient-primary text-primary-foreground";
-      case "Completed":
+      case "completed":
         return "bg-green-500 text-white";
       default:
         return "bg-muted text-muted-foreground";
@@ -178,7 +212,7 @@ export default function Tasks() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-accent text-secondary-foreground gap-2 w-full sm:w-auto" onClick={() => setEditingTask(null)}>
+            <Button className="gradient-accent text-secondary-foreground gap-2 w-full sm:w-auto" onClick={() => { setEditingTask(null); setStartDateBs(""); setDueDateBs(""); }}>
               <Plus className="w-4 h-4" />
               Add Task
             </Button>
@@ -215,39 +249,37 @@ export default function Tasks() {
                   rows={3}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    name="start_date"
-                    type="date"
-                    defaultValue={editingTask?.start_date || ""}
-                    required
+                  <Label htmlFor="start_date_bs">Start Date (BS)</Label>
+                  <NepaliDatePicker
+                    id="start_date_bs"
+                    value={startDateBs}
+                    onChange={setStartDateBs}
+                    placeholder="Select start date"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="due_date">Due Date</Label>
-                  <Input
-                    id="due_date"
-                    name="due_date"
-                    type="date"
-                    defaultValue={editingTask?.due_date || ""}
-                    required
+                  <Label htmlFor="due_date_bs">Due Date (BS)</Label>
+                  <NepaliDatePicker
+                    id="due_date_bs"
+                    value={dueDateBs}
+                    onChange={setDueDateBs}
+                    placeholder="Select due date"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select name="status" defaultValue={editingTask?.status || "Pending"}>
+                  <Select name="status" defaultValue={editingTask?.status || "pending"}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="In Progress">In Progress</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -313,9 +345,9 @@ export default function Tasks() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -341,7 +373,7 @@ export default function Tasks() {
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <h3 className="font-semibold text-base md:text-lg truncate">{task.title}</h3>
                       <Badge className={getStatusColor(task.status) + " text-xs"}>
-                        {task.status}
+                        {formatStatus(task.status)}
                       </Badge>
                     </div>
                     {task.description && (
@@ -352,7 +384,7 @@ export default function Tasks() {
                     <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm">
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{task.start_date} → {task.due_date}</span>
+                        <span>{task.start_date_bs} → {task.due_date_bs}</span>
                       </div>
                       {task.assigned_to_name && (
                         <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -371,9 +403,9 @@ export default function Tasks() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="In Progress">In Progress</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
                       </SelectContent>
                     </Select>
                     <div className="flex gap-1">
@@ -407,13 +439,21 @@ export default function Tasks() {
             <p className="text-sm md:text-base text-muted-foreground">No tasks found</p>
             <Button
               className="mt-4 gradient-accent text-secondary-foreground"
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => { setEditingTask(null); setStartDateBs(""); setDueDateBs(""); setIsDialogOpen(true); }}
             >
               Create your first task
             </Button>
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={deleteTaskId !== null}
+        onOpenChange={(open) => !open && setDeleteTaskId(null)}
+        title="Delete task?"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

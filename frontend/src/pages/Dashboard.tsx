@@ -38,7 +38,7 @@ export default function Dashboard() {
             tasksApi.getAll(),
           ]);
           setEvents(eventData);
-          setTasks(taskData.filter((t: Task) => t.status !== "Completed").slice(0, 5));
+          setTasks(taskData.filter((t: Task) => t.status !== "completed").slice(0, 5));
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -50,8 +50,8 @@ export default function Dashboard() {
     fetchData();
   }, [isAuthenticated]);
 
-  const pendingTasks = tasks.filter((t) => t.status === "Pending").length;
-  const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
+  const pendingTasks = tasks.filter((t) => t.status === "pending").length;
+  const inProgressTasks = tasks.filter((t) => t.status === "in_progress").length;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
@@ -254,17 +254,21 @@ export default function Dashboard() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        Due: {task.due_date}
+                        Due: {task.due_date_bs}
                       </p>
                     </div>
                     <Badge
-                      variant={task.status === "Pending" ? "secondary" : "default"}
+                      variant={task.status === "pending" ? "secondary" : "default"}
                       className={cn(
                         "text-xs shrink-0",
-                        task.status === "In Progress" && "gradient-primary text-primary-foreground"
+                        task.status === "in_progress" && "gradient-primary text-primary-foreground"
                       )}
                     >
-                      {task.status === "In Progress" ? "Active" : task.status}
+                      {task.status === "in_progress"
+                        ? "Active"
+                        : task.status === "completed"
+                        ? "Completed"
+                        : "Pending"}
                     </Badge>
                   </div>
                 </div>

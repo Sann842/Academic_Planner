@@ -18,6 +18,7 @@ import {
 import { CalendarDays, Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { NepaliDatePicker } from "@/components/NepaliDatePicker";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function Events() {
   const { isAuthenticated } = useAuth();
@@ -30,6 +31,7 @@ export default function Events() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [dateBs, setDateBs] = useState("");
+  const [deleteEventId, setDeleteEventId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -92,15 +94,20 @@ export default function Events() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+  const handleDelete = (id: number) => {
+    setDeleteEventId(id);
+  };
 
+  const confirmDelete = async () => {
+    if (deleteEventId === null) return;
     try {
-      await eventsApi.delete(id);
+      await eventsApi.delete(deleteEventId);
       toast.success("Event deleted");
       fetchEvents();
     } catch (error) {
       toast.error("Failed to delete event");
+    } finally {
+      setDeleteEventId(null);
     }
   };
 
@@ -291,6 +298,14 @@ export default function Events() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={deleteEventId !== null}
+        onOpenChange={(open) => !open && setDeleteEventId(null)}
+        title="Delete event?"
+        description="Are you sure you want to delete this event? This action cannot be undone."
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

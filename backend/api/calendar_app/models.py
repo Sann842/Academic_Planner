@@ -84,6 +84,8 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         validate_bs_date(self.start_date_bs)
         validate_bs_date(self.due_date_bs)
+        if self.due_date_bs < self.start_date_bs:
+            raise ValueError("Due date cannot be before the start date.")
         self.start_date_ad = bs_to_ad(self.start_date_bs)
         self.due_date_ad = bs_to_ad(self.due_date_bs)
         super().save(*args, **kwargs)

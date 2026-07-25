@@ -54,6 +54,13 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Task.objects.all().order_by("due_date_ad")  
         # Normal users see only tasks assigned to them
         return Task.objects.filter(assigned_to=user).order_by("due_date_ad")
+
+    def perform_create(self, serializer):
+        # Automatically assign the logged-in user, rather than trusting a
+        # client-supplied assigned_to (which would let any user assign
+        # tasks to someone else, and which the create form never sent
+        # anyway - see EventViewSet.perform_create for the same pattern).
+        serializer.save(assigned_to=self.request.user)
     
     # Update task status only
     @action(detail=True, methods=["get", "patch"], serializer_class=TaskStatusSerializer)

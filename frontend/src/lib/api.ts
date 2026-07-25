@@ -147,8 +147,8 @@ export const tasksApi = {
   create: (data: {
     title: string;
     description?: string;
-    start_date: string;
-    due_date: string;
+    start_date_bs: string;
+    due_date_bs: string;
     status?: string;
     assigned_to?: number;
     event?: number;
@@ -158,8 +158,8 @@ export const tasksApi = {
     data: {
       title?: string;
       description?: string;
-      start_date?: string;
-      due_date?: string;
+      start_date_bs?: string;
+      due_date_bs?: string;
       status?: string;
       assigned_to?: number;
       event?: number;
@@ -192,9 +192,11 @@ export interface Task {
   id: number;
   title: string;
   description?: string;
-  start_date: string;
-  due_date: string;
-  status: "Pending" | "In Progress" | "Completed";
+  start_date_bs: string;
+  start_date_ad: string;
+  due_date_bs: string;
+  due_date_ad: string;
+  status: "pending" | "in_progress" | "completed";
   assigned_to?: number;
   assigned_to_name?: string;
   event?: number;

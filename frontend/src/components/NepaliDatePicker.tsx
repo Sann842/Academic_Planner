@@ -91,7 +91,7 @@ export function NepaliDatePicker({
   };
 
   const displayLabel = parsed
-    ? `${formatBSDate(parsed.year, parsed.month, parsed.day)} (${value})`
+    ? formatBSDate(parsed.year, parsed.month, parsed.day)
     : placeholder;
 
   return (
@@ -102,6 +102,7 @@ export function NepaliDatePicker({
           type="button"
           variant="outline"
           disabled={disabled}
+          title={parsed ? `${displayLabel} (${value})` : undefined}
           className={cn(
             "w-full justify-start text-left font-normal",
             !parsed && "text-muted-foreground"

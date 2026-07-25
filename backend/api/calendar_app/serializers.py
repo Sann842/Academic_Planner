@@ -49,7 +49,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = "__all__"
-        read_only_fields = ("start_date_ad", "due_date_ad")
+        read_only_fields = ("start_date_ad", "due_date_ad", "assigned_to")
 
     def validate_start_date_bs(self, value):
         try:
@@ -64,6 +64,21 @@ class TaskSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(exc.messages[0])
         return value
+
+    def validate(self, data):
+        # Fall back to the existing instance's value for partial updates
+        # (e.g. PATCH only changing status) where one of the two dates
+        # isn't present in the incoming data.
+        start = data.get("start_date_bs", getattr(self.instance, "start_date_bs", None))
+        due = data.get("due_date_bs", getattr(self.instance, "due_date_bs", None))
+
+        # Safe to compare as plain strings: both are always zero-padded
+        # "YYYY-MM-DD", so lexicographic order matches chronological order.
+        if start and due and due < start:
+            raise serializers.ValidationError(
+                {"due_date_bs": "Due date cannot be before the start date."}
+            )
+        return data
 
 
 # TASK STATUS SERIALIZER
