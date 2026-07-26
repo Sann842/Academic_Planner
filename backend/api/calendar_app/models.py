@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from .utils.dates import bs_to_ad, ad_to_bs_str, validate_bs_date
 
 
@@ -80,6 +81,21 @@ class Task(models.Model):
     due_date_ad = models.DateField(editable=False)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
+    def clean(self):
+        # Runs via full_clean(), which Django admin/ModelForms call
+        # automatically before save() - lets this surface as a normal "please
+        # correct the error below" form message instead of an unhandled
+        # exception from save() (which ModelForm validation doesn't wrap).
+        super().clean()
+        if (
+            self.start_date_bs
+            and self.due_date_bs
+            and self.due_date_bs < self.start_date_bs
+        ):
+            raise ValidationError(
+                {"due_date_bs": "Due date cannot be before the start date."}
+            )
 
     def save(self, *args, **kwargs):
         validate_bs_date(self.start_date_bs)

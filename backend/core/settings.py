@@ -22,7 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-shz8o4r%%s2$s*e*rg^2jlemu=zjl4t9gazsu817y!wak34ob3'
+# SECURITY WARNING: keep the secret key used in production secret!
+# Reads from the SECRET_KEY environment variable in production/deployment.
+# The fallback below is the key that was previously hardcoded here - since
+# it's already in git history, treat it as compromised/dev-only. Set a
+# freshly-generated SECRET_KEY env var on Render (or wherever this deploys)
+# rather than relying on this fallback for anything real.
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-shz8o4r%%s2$s*e*rg^2jlemu=zjl4t9gazsu817y!wak34ob3",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Defaults to False (safe for production/Render) unless DEBUG=True is set
