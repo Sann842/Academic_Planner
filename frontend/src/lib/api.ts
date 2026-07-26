@@ -1,4 +1,8 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+// Reads from VITE_API_BASE_URL (set in .env / .env.production, or your
+// hosting provider's environment variables) so the same build can point at
+// different backends per environment. Falls back to localhost so local dev
+// works out of the box with no setup.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
 
 // -------------------------
 // Token management
