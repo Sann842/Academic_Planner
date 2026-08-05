@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { NavLink } from "@/components/NavLink";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +102,7 @@ export default function Auth() {
         </div>
 
         <Card className="glass-card border-0 shadow-lg">
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue="login" className="w-full" onValueChange={() => setError(null)}>
             <CardHeader className="pb-3 px-4 md:px-6">
               <TabsList className="grid w-full grid-cols-2 bg-muted/50 h-10">
                 <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-sm">
@@ -135,10 +136,9 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password" className="text-sm">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="login-password"
                       name="password"
-                      type="password"
                       placeholder="Enter your password"
                       required
                       className="h-10 md:h-11"
@@ -172,10 +172,9 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-password" className="text-sm">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="register-password"
                       name="password"
-                      type="password"
                       placeholder="Min 8 characters"
                       required
                       minLength={8}
@@ -184,10 +183,9 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password" className="text-sm">Confirm Password</Label>
-                    <Input
+                    <PasswordInput
                       id="confirm-password"
                       name="confirmPassword"
-                      type="password"
                       placeholder="Confirm your password"
                       required
                       className="h-10 md:h-11"
