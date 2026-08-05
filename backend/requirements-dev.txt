@@ -1,0 +1,6 @@
+# Dev/testing-only dependencies. Install with:
+#   pip install -r requirements.txt -r requirements-dev.txt
+# Not needed in production - keep this out of the main requirements.txt so
+# Render's deploy doesn't install test tooling it'll never use.
+
+coverage==7.15.3

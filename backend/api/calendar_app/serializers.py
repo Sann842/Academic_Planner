@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from .models import Holiday, Event, Task
-from .utils.dates import validate_bs_date
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 
 
@@ -16,12 +14,11 @@ class HolidaySerializer(serializers.ModelSerializer):
         # Prevent users from modifying auto-generated AD date
         read_only_fields = ("date_ad",)
 
-    def validate_date_bs(self, value):
-        try:
-            validate_bs_date(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0])
-        return value
+    # Note: no explicit validate_date_bs() here - DRF's ModelSerializer
+    # automatically copies the model field's validators=[validate_bs_date]
+    # onto the generated CharField, so invalid dates are already rejected
+    # with a clean error before any custom validate_<field>() hook would
+    # even run (confirmed: such a hook here never actually executes).
 
 
 # EVENT SERIALIZER
@@ -33,12 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
         # Fields are set automatically and should not be edited by users
         read_only_fields = ("date_ad", "created_by")
 
-    def validate_date_bs(self, value):
-        try:
-            validate_bs_date(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0])
-        return value
+    # See HolidaySerializer's comment - same reasoning applies here.
 
 
 # TASK SERIALIZER
@@ -51,19 +43,8 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("start_date_ad", "due_date_ad", "assigned_to")
 
-    def validate_start_date_bs(self, value):
-        try:
-            validate_bs_date(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0])
-        return value
-
-    def validate_due_date_bs(self, value):
-        try:
-            validate_bs_date(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0])
-        return value
+    # See HolidaySerializer's comment - same reasoning applies to both BS
+    # date fields here.
 
     def validate(self, data):
         # Fall back to the existing instance's value for partial updates

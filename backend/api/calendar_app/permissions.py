@@ -19,7 +19,13 @@ class IsOwnerOrReadOnly(BasePermission):
         return obj.created_by == request.user
 
 # TASK PERMISSIONS
-# Only the assigned user can view or edit the task
+# Only the assigned user can view or edit the task, except staff can also
+# read (not edit) any task - matches TaskViewSet.get_queryset(), which
+# already gives staff visibility into every task in the list view. Without
+# this, staff could see a task existed in the list but got a 403 clicking
+# into its detail.
 class IsTaskOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS and request.user.is_staff:
+            return True
         return obj.assigned_to == request.user
