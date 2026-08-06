@@ -96,7 +96,6 @@ export const authApi = {
 
     const data = await response.json();
     setTokens(data.access, data.refresh);
-    localStorage.setItem("username", username);
     return data;
   },
 
@@ -112,7 +111,6 @@ export const authApi = {
       throw new Error(error.detail || error.error || "Registration failed");
     }
 
-    localStorage.setItem("username", username);
     return response.json();
   },
 

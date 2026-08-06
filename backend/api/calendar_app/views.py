@@ -2,10 +2,25 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .permissions import IsAdminManageReadOnly, IsOwnerOrReadOnly, IsTaskOwner
 from .models import Holiday, Event, Task
-from .serializers import HolidaySerializer, EventSerializer, TaskSerializer, TaskStatusSerializer, RegisterSerializer
+from .serializers import (
+    HolidaySerializer,
+    EventSerializer,
+    TaskSerializer,
+    TaskStatusSerializer,
+    RegisterSerializer,
+    MyTokenObtainPairSerializer,
+)
+
+
+# AUTH: LOGIN VIEW
+# Uses MyTokenObtainPairSerializer so the issued JWT carries is_staff as a
+# real claim instead of the frontend guessing admin status from a username.
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 # HOLIDAY VIEWSET

@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getTokens, authApi } from "@/lib/api";
+import { decodeJwt } from "@/lib/jwt";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
-  isAdmin: boolean; // <-- add isAdmin
+  isAdmin: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -16,34 +17,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false); // <-- state for admin
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Restore session from the access token itself, rather than a
+    // separately-stored flag that could go stale. The backend embeds
+    // is_staff as a real claim (see MyTokenObtainPairSerializer), so this
+    // reflects the user's actual permissions, not a guess.
     const { access } = getTokens();
-    const storedUsername = localStorage.getItem("username");
-    const storedIsAdmin = localStorage.getItem("isAdmin") === "true"; // optional persistence
-
-    if (access && storedUsername) {
-      setIsAuthenticated(true);
-      setUsername(storedUsername);
-      setIsAdmin(storedIsAdmin);
+    if (access) {
+      const claims = decodeJwt(access);
+      if (claims) {
+        setIsAuthenticated(true);
+        setUsername((claims.username as string) ?? null);
+        setIsAdmin(Boolean(claims.is_staff));
+      }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (user: string, password: string) => {
-    await authApi.login(user, password);
-    localStorage.setItem("username", user);
+    const data = await authApi.login(user, password);
+    const claims = decodeJwt(data.access);
 
-    // Determine if user is admin
-    // Here we just check username === "admin"; you can replace with API call if backend provides it
-    const adminStatus = user === "admin";
-    localStorage.setItem("isAdmin", adminStatus.toString());
-    setIsAdmin(adminStatus);
-
-    setUsername(user);
+    setUsername((claims?.username as string) ?? user);
+    setIsAdmin(Boolean(claims?.is_staff));
     setIsAuthenticated(true);
   };
 
@@ -53,8 +52,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     authApi.logout();
-    localStorage.removeItem("username");
-    localStorage.removeItem("isAdmin");
     setUsername(null);
     setIsAdmin(false);
     setIsAuthenticated(false);

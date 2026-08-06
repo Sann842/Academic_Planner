@@ -77,3 +77,55 @@ class AuthOrderingTests(APITestCase):
             "/api/tasks/", HTTP_AUTHORIZATION=f"Bearer {access}"
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+
+class TokenClaimsTests(APITestCase):
+    """
+    Regression tests for embedding is_staff in the JWT itself, replacing
+    the frontend's old username == "admin" guess with the real value.
+    """
+
+    def _decode_claims(self, token):
+        import base64
+        import json
+
+        payload = token.split(".")[1]
+        payload += "=" * (-len(payload) % 4)
+        return json.loads(base64.urlsafe_b64decode(payload))
+
+    def test_staff_user_token_carries_is_staff_true(self):
+        User.objects.create_user(
+            username="staffclaim", password="testpass123", is_staff=True
+        )
+        resp = self.client.post(
+            "/api/auth/login/",
+            {"username": "staffclaim", "password": "testpass123"},
+        )
+        claims = self._decode_claims(resp.data["access"])
+        self.assertTrue(claims["is_staff"])
+        self.assertEqual(claims["username"], "staffclaim")
+
+    def test_non_staff_user_token_carries_is_staff_false(self):
+        User.objects.create_user(
+            username="nonstaffclaim", password="testpass123", is_staff=False
+        )
+        resp = self.client.post(
+            "/api/auth/login/",
+            {"username": "nonstaffclaim", "password": "testpass123"},
+        )
+        claims = self._decode_claims(resp.data["access"])
+        self.assertFalse(claims["is_staff"])
+
+    def test_is_staff_claim_survives_token_refresh(self):
+        User.objects.create_user(
+            username="refreshclaim", password="testpass123", is_staff=True
+        )
+        login_resp = self.client.post(
+            "/api/auth/login/",
+            {"username": "refreshclaim", "password": "testpass123"},
+        )
+        refresh_resp = self.client.post(
+            "/api/auth/refresh/", {"refresh": login_resp.data["refresh"]}
+        )
+        claims = self._decode_claims(refresh_resp.data["access"])
+        self.assertTrue(claims["is_staff"])

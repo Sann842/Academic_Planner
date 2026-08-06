@@ -3,6 +3,26 @@ from .models import Holiday, Event, Task
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+# AUTH: JWT TOKEN SERIALIZER
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Adds is_staff (and username, for convenience) as claims embedded
+    directly in the JWT, so the frontend can know a user's real admin
+    status without a client-side username=="admin" guess and without an
+    extra API round-trip. Since SimpleJWT copies custom claims from the
+    refresh token into every newly-minted access token on /api/auth/refresh/
+    too, this stays accurate across silent token refreshes automatically.
+    """
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["is_staff"] = user.is_staff
+        token["username"] = user.username
+        return token
 
 
 # HOLIDAY SERIALIZER

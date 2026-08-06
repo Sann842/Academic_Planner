@@ -19,13 +19,13 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 # JWT authentication views
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 # Router for automatically generating API routes
 from rest_framework.routers import DefaultRouter
 
 # ViewSets for the calendar app
-from api.calendar_app.views import HolidayViewSet, EventViewSet, TaskViewSet, register
+from api.calendar_app.views import HolidayViewSet, EventViewSet, TaskViewSet, register, MyTokenObtainPairView
 
 
 # API ROUTER SETUP
@@ -43,7 +43,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Authentication endpoints (JWT)
-    path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/login/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/auth/register/", register, name="register"),
     
