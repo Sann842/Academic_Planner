@@ -71,8 +71,22 @@ MIDDLEWARE = [
     
 ]
 
-# Allow requests from all origins (development only)
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS: wide open in local dev for convenience. In production, only the
+# origins explicitly listed in CORS_ALLOWED_ORIGINS (set via env var) are
+# allowed - this was previously CORS_ALLOW_ALL_ORIGINS = True unconditionally
+# despite this same comment saying "development only", which meant it was
+# also wide open in production. Set CORS_ALLOWED_ORIGINS on your deployment
+# (e.g. Render) to your actual deployed frontend URL(s), comma-separated,
+# once you deploy the frontend - e.g.:
+#   CORS_ALLOWED_ORIGINS=https://your-frontend.onrender.com
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+        if origin.strip()
+    ]
 
 ROOT_URLCONF = 'core.urls'
 

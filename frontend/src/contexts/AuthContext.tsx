@@ -37,6 +37,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    // AuthContext lives outside BrowserRouter (see App.tsx), so it can't
+    // call useNavigate() itself to redirect on session expiry. Instead,
+    // it just resets isAuthenticated here, and pages that already redirect
+    // on !isAuthenticated (Events.tsx, Tasks.tsx) pick it up automatically.
+    const handleSessionCleared = () => {
+      setIsAuthenticated(false);
+      setUsername(null);
+      setIsAdmin(false);
+    };
+    window.addEventListener("auth:session-cleared", handleSessionCleared);
+    return () =>
+      window.removeEventListener("auth:session-cleared", handleSessionCleared);
+  }, []);
+
   const login = async (user: string, password: string) => {
     const data = await authApi.login(user, password);
     const claims = decodeJwt(data.access);

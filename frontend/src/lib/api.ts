@@ -22,6 +22,13 @@ export const clearTokens = () => {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
   localStorage.removeItem("username");
+  // AuthContext listens for this to reset its own state. Needed because
+  // clearTokens() can be called from apiRequest() below when a session
+  // silently expires mid-use (not just from an explicit logout button
+  // click) - without this, AuthContext.isAuthenticated stayed stuck at
+  // true, so pages never redirected to /auth and just showed repeated
+  // "Unauthorized" errors instead.
+  window.dispatchEvent(new Event("auth:session-cleared"));
 };
 
 // -------------------------
