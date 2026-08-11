@@ -27,8 +27,10 @@ class TaskAssignmentTests(APITestCase):
         self.assertEqual(resp.data["assigned_to"], self.user_a.id)
 
     def test_create_without_assigned_to_field_succeeds(self):
-        # Regression test: the create form never sends assigned_to at all,
-        # which used to 400 before assigned_to was made read-only + auto-set.
+        """
+        Regression test: the create form never sends assigned_to at all,
+        which used to 400 before assigned_to was made read-only + auto-set.
+        """
         self.client.force_authenticate(self.user_a)
         resp = self.client.post(
             "/api/tasks/",
@@ -71,9 +73,11 @@ class TaskOwnershipTests(APITestCase):
         self.assertIn(self.task_a.id, task_ids)
 
     def test_staff_can_view_non_owned_task_detail(self):
-        # Regression test: staff could see a task in the list view but got
-        # a 403 clicking into its detail, because IsTaskOwner had no
-        # exception for staff/safe-methods (unlike Event's equivalent).
+        """
+        Regression test: staff could see a task in the list view but got
+        a 403 clicking into its detail, because IsTaskOwner had no
+        exception for staff/safe-methods (unlike Event's equivalent).
+        """
         self.client.force_authenticate(self.staff_user)
         resp = self.client.get(f"/api/tasks/{self.task_a.id}/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -87,8 +91,10 @@ class TaskOwnershipTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_cannot_edit_other_users_task(self):
-        # 404, not 403 - see the matching comment in test_api_events.py's
-        # test_user_cannot_edit_other_users_event for why.
+        """
+        404, not 403 - see the matching comment in test_api_events.py's
+        test_user_cannot_edit_other_users_event for why.
+        """
         self.client.force_authenticate(self.user_b)
         resp = self.client.patch(
             f"/api/tasks/{self.task_a.id}/", {"status": "completed"}
@@ -128,8 +134,10 @@ class TaskStatusValidationTests(APITestCase):
             )
 
     def test_capitalized_status_rejected(self):
-        # Regression test for the frontend/backend casing mismatch bug:
-        # the backend only ever accepted lowercase snake_case values.
+        """
+        Regression test for the frontend/backend casing mismatch bug:
+        the backend only ever accepted lowercase snake_case values.
+        """
         resp = self._create_task("Pending")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -148,6 +156,22 @@ class TaskStatusValidationTests(APITestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["status"], "in_progress")
+
+    def test_update_status_action_cannot_change_title(self):
+        """
+        Regression test: TaskStatusSerializer previously also exposed
+        "title" as writable, meaning a "status update" endpoint could
+        silently rename the task too. Now restricted to just "status".
+        """
+        create_resp = self._create_task("pending")
+        task_id = create_resp.data["id"]
+        original_title = create_resp.data["title"]
+        resp = self.client.patch(
+            f"/api/tasks/{task_id}/update_status/",
+            {"status": "in_progress", "title": "Hijacked title"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["title"], original_title)
 
 
 class TaskDateValidationTests(APITestCase):
@@ -198,8 +222,10 @@ class TaskDateValidationTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_status_only_patch_not_blocked_by_existing_valid_dates(self):
-        # Regression test: a status-only PATCH must not be blocked by the
-        # due/start check falling back to the instance's own (valid) dates.
+        """
+        Regression test: a status-only PATCH must not be blocked by the
+        due/start check falling back to the instance's own (valid) dates.
+        """
         create_resp = self.client.post(
             "/api/tasks/",
             {

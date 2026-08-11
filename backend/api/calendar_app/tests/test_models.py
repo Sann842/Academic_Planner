@@ -82,8 +82,10 @@ class TaskModelTests(TestCase):
         task.clean()
 
     def test_save_rejects_due_before_start_as_defense_in_depth(self):
-        # Covers writes that bypass a ModelForm/clean(), e.g. direct
-        # .save() calls from the shell or a management command.
+        """
+        Covers writes that bypass a ModelForm/clean(), e.g. direct
+        .save() calls from the shell or a management command.
+        """
         task = Task(
             title="Bad Task via save",
             assigned_to=self.user,

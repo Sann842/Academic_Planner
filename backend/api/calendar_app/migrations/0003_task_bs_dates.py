@@ -33,8 +33,7 @@ def populate_bs_dates(apps, schema_editor):
 
 
 def reverse_populate_bs_dates(apps, schema_editor):
-    # Nothing to do: start_date_ad/due_date_ad already hold the AD values;
-    # the BS columns are simply dropped by the reverse of AddField.
+    # Nothing to do: start_date_ad/due_date_ad already hold the AD values; the BS columns are simply dropped by the reverse of AddField.
     pass
 
 
@@ -66,8 +65,7 @@ class Migration(migrations.Migration):
             name="due_date_ad",
             field=models.DateField(editable=False),
         ),
-        # Step 2: add the new BS columns, temporarily nullable so existing
-        # rows don't need a value yet
+        # Step 2: add the new BS columns, temporarily nullable so existing rows don't need a value yet
         migrations.AddField(
             model_name="task",
             name="start_date_bs",

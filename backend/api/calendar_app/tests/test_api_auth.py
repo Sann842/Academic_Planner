@@ -4,6 +4,19 @@ from rest_framework import status
 
 
 class RegisterTests(APITestCase):
+    def test_register_works_without_authentication(self):
+        """
+        Regression test: DEFAULT_PERMISSION_CLASSES defaults to
+        IsAuthenticated now (previously AllowAny), so register must
+        explicitly opt out via its own @permission_classes([AllowAny]) -
+        otherwise no one could ever create their first account.
+        """
+        resp = self.client.post(
+            "/api/auth/register/",
+            {"username": "anonreguser", "password": "StrongPass123"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
     def test_register_creates_non_staff_user(self):
         resp = self.client.post(
             "/api/auth/register/",
@@ -77,6 +90,45 @@ class AuthOrderingTests(APITestCase):
             "/api/tasks/", HTTP_AUTHORIZATION=f"Bearer {access}"
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+
+class DefaultPermissionTests(APITestCase):
+    """
+    Regression tests for changing DEFAULT_PERMISSION_CLASSES from AllowAny
+    to IsAuthenticated. Endpoints that need to be reachable anonymously
+    (login, refresh, register) must keep working; anything without an
+    explicit override should now require authentication by default.
+    """
+
+    def test_login_works_anonymously(self):
+        User.objects.create_user(username="anonlogin", password="testpass123")
+        resp = self.client.post(
+            "/api/auth/login/",
+            {"username": "anonlogin", "password": "testpass123"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_refresh_works_anonymously(self):
+        User.objects.create_user(username="anonrefresh", password="testpass123")
+        login_resp = self.client.post(
+            "/api/auth/login/",
+            {"username": "anonrefresh", "password": "testpass123"},
+        )
+        resp = self.client.post(
+            "/api/auth/refresh/", {"refresh": login_resp.data["refresh"]}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_api_root_now_requires_auth(self):
+        """
+        This is an intentional behavior change: the bare DRF browsable
+        API root previously relied on the AllowAny default and was
+        reachable anonymously. It has no explicit permission_classes of
+        its own, so it now inherits the fail-closed IsAuthenticated
+        default like any future endpoint would.
+        """
+        resp = self.client.get("/api/")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class TokenClaimsTests(APITestCase):

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Calendar, Search, Star } from "lucide-react";
+import { getTodayAdString } from "@/lib/utils";
 
 export default function Holidays() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -17,12 +18,10 @@ export default function Holidays() {
         const data = await holidaysApi.getAll();
         
         // Filter to only show upcoming holidays
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = getTodayAdString();
         
         const upcomingHolidays = data.filter((h: Holiday) => {
-          const holidayDate = new Date(h.date_ad);
-          return holidayDate >= today;
+          return h.date_ad >= today;
         });
         
         setHolidays(upcomingHolidays);

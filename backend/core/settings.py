@@ -18,25 +18,31 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+"""
+Quick-start development settings - unsuitable for production
+See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+"""
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECURITY WARNING: keep the secret key used in production secret!
-# Reads from the SECRET_KEY environment variable in production/deployment.
-# The fallback below is the key that was previously hardcoded here - since
-# it's already in git history, treat it as compromised/dev-only. Set a
-# freshly-generated SECRET_KEY env var on Render (or wherever this deploys)
-# rather than relying on this fallback for anything real.
+"""
+SECURITY WARNING: keep the secret key used in production secret!
+SECURITY WARNING: keep the secret key used in production secret!
+Reads from the SECRET_KEY environment variable in production/deployment.
+The fallback below is the key that was previously hardcoded here - since
+it's already in git history, treat it as compromised/dev-only. Set a
+freshly-generated SECRET_KEY env var on Render (or wherever this deploys)
+rather than relying on this fallback for anything real.
+"""
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
     "django-insecure-shz8o4r%%s2$s*e*rg^2jlemu=zjl4t9gazsu817y!wak34ob3",
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Defaults to False (safe for production/Render) unless DEBUG=True is set
-# in the environment. For local development, export DEBUG=True (or put it
-# in a local .env you load into your shell) before running the server.
+"""
+SECURITY WARNING: don't run with debug turned on in production!
+Defaults to False (safe for production/Render) unless DEBUG=True is set
+in the environment. For local development, export DEBUG=True (or put it
+in a local .env you load into your shell) before running the server.
+"""
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["academic-planner-1rjz.onrender.com",
@@ -71,14 +77,16 @@ MIDDLEWARE = [
     
 ]
 
-# CORS: wide open in local dev for convenience. In production, only the
-# origins explicitly listed in CORS_ALLOWED_ORIGINS (set via env var) are
-# allowed - this was previously CORS_ALLOW_ALL_ORIGINS = True unconditionally
-# despite this same comment saying "development only", which meant it was
-# also wide open in production. Set CORS_ALLOWED_ORIGINS on your deployment
-# (e.g. Render) to your actual deployed frontend URL(s), comma-separated,
-# once you deploy the frontend - e.g.:
-#   CORS_ALLOWED_ORIGINS=https://your-frontend.onrender.com
+"""
+CORS: wide open in local dev for convenience. In production, only the
+origins explicitly listed in CORS_ALLOWED_ORIGINS (set via env var) are
+allowed - this was previously CORS_ALLOW_ALL_ORIGINS = True unconditionally
+despite this same comment saying "development only", which meant it was
+also wide open in production. Set CORS_ALLOWED_ORIGINS on your deployment
+(e.g. Render) to your actual deployed frontend URL(s), comma-separated,
+once you deploy the frontend - e.g.:
+  CORS_ALLOWED_ORIGINS=https://your-frontend.onrender.com
+"""
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
@@ -108,8 +116,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+"""
+Database
+https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+"""
 
 DATABASES = {
     'default': {
@@ -119,8 +129,10 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+"""
+Password validation
+https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+"""
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -139,8 +151,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
+"""
+Internationalization
+https://docs.djangoproject.com/en/6.0/topics/i18n/
+"""
 
 LANGUAGE_CODE = 'en-us'
 
@@ -151,8 +165,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
+"""
+Static files (CSS, JavaScript, Images)
+https://docs.djangoproject.com/en/6.0/howto/static-files/
+"""
 
 STATIC_URL = '/static/'
 
@@ -160,8 +176,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-# REST framework authentication and permission settings
-# for login (only in development, not for production)
+"""
+REST framework authentication and permission settings
+for login (only in development, not for production)
+"""
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # JWT listed first: the frontend is JWT-only, and DRF decides whether
@@ -176,8 +194,13 @@ REST_FRAMEWORK = {
         # "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        # "rest_framework.permissions.IsAuthenticated",
-        'rest_framework.permissions.AllowAny', # Allow all requests
+        # Fail-closed default: requires authentication unless a view
+        # explicitly opts out (register/login/refresh already do, and
+        # Holiday/Event/Task all explicitly set their own permission_classes
+        # anyway). Previously AllowAny, which meant any future endpoint that
+        # forgot to set its own permission_classes would be open to anyone
+        # by default instead of safely requiring login.
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 

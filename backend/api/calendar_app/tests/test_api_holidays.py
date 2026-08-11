@@ -18,8 +18,10 @@ class HolidayPermissionTests(APITestCase):
         )
 
     def test_anonymous_user_can_read_holidays(self):
-        # IsAdminManageReadOnly explicitly allows anyone to read (no
-        # IsAuthenticated in the permission chain for this viewset).
+        """
+        IsAdminManageReadOnly explicitly allows anyone to read (no
+        IsAuthenticated in the permission chain for this viewset).
+        """
         resp = self.client.get("/api/holidays/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 

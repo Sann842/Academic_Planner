@@ -8,9 +8,11 @@ from .utils.dates import bs_to_ad, ad_to_bs_str, validate_bs_date
 class Holiday(models.Model):
     name = models.CharField(max_length=200)
 
-    # Stored as "YYYY-MM-DD" text rather than DateField: Django's DateField
-    # is backed by a real Gregorian date and can't hold valid BS days like
-    # 31 or 32 that don't exist in the same numbered Gregorian month.
+    """
+    Stored as "YYYY-MM-DD" text rather than DateField: Django's DateField
+    is backed by a real Gregorian date and can't hold valid BS days like
+    31 or 32 that don't exist in the same numbered Gregorian month.
+    """
     date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
 
     # Automatically calculated
@@ -19,9 +21,11 @@ class Holiday(models.Model):
     is_public = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        # Validate then convert BS date to AD before saving. Validating here
-        # (not just in the serializer) keeps bad data out even via the admin
-        # or shell.
+        """
+        Validate then convert BS date to AD before saving. Validating here
+        (not just in the serializer) keeps bad data out even via the admin
+        or shell.
+        """
         validate_bs_date(self.date_bs)
         self.date_ad = bs_to_ad(self.date_bs)
         super().save(*args, **kwargs)
@@ -73,8 +77,10 @@ class Task(models.Model):
     # Optional link to an event
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)  # use string with app label
     
-    # BS dates entered by the user; AD equivalents computed automatically
-    # (same pattern as Holiday/Event, for consistency across the app)
+    """
+    BS dates entered by the user; AD equivalents computed automatically
+    (same pattern as Holiday/Event, for consistency across the app)
+    """
     start_date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
     start_date_ad = models.DateField(editable=False)
     due_date_bs = models.CharField(max_length=10, validators=[validate_bs_date])
@@ -83,10 +89,12 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
     def clean(self):
-        # Runs via full_clean(), which Django admin/ModelForms call
-        # automatically before save() - lets this surface as a normal "please
-        # correct the error below" form message instead of an unhandled
-        # exception from save() (which ModelForm validation doesn't wrap).
+        """
+        Runs via full_clean(), which Django admin/ModelForms call
+        automatically before save() - lets this surface as a normal "please
+        correct the error below" form message instead of an unhandled
+        exception from save() (which ModelForm validation doesn't wrap).
+        """
         super().clean()
         if (
             self.start_date_bs

@@ -34,11 +34,13 @@ class HolidaySerializer(serializers.ModelSerializer):
         # Prevent users from modifying auto-generated AD date
         read_only_fields = ("date_ad",)
 
-    # Note: no explicit validate_date_bs() here - DRF's ModelSerializer
-    # automatically copies the model field's validators=[validate_bs_date]
-    # onto the generated CharField, so invalid dates are already rejected
-    # with a clean error before any custom validate_<field>() hook would
-    # even run (confirmed: such a hook here never actually executes).
+    """
+    Note: no explicit validate_date_bs() here - DRF's ModelSerializer
+    automatically copies the model field's validators=[validate_bs_date]
+    onto the generated CharField, so invalid dates are already rejected
+    with a clean error before any custom validate_<field>() hook would
+    even run (confirmed: such a hook here never actually executes).
+    """
 
 
 # EVENT SERIALIZER
@@ -63,18 +65,24 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("start_date_ad", "due_date_ad", "assigned_to")
 
-    # See HolidaySerializer's comment - same reasoning applies to both BS
-    # date fields here.
+    """
+    See HolidaySerializer's comment - same reasoning applies to both BS
+    date fields here.
+    """
 
     def validate(self, data):
-        # Fall back to the existing instance's value for partial updates
-        # (e.g. PATCH only changing status) where one of the two dates
-        # isn't present in the incoming data.
+        """
+        Fall back to the existing instance's value for partial updates
+        (e.g. PATCH only changing status) where one of the two dates
+        isn't present in the incoming data.
+        """
         start = data.get("start_date_bs", getattr(self.instance, "start_date_bs", None))
         due = data.get("due_date_bs", getattr(self.instance, "due_date_bs", None))
 
-        # Safe to compare as plain strings: both are always zero-padded
-        # "YYYY-MM-DD", so lexicographic order matches chronological order.
+        """
+        Safe to compare as plain strings: both are always zero-padded
+        "YYYY-MM-DD", so lexicographic order matches chronological order.
+        """
         if start and due and due < start:
             raise serializers.ValidationError(
                 {"due_date_bs": "Due date cannot be before the start date."}
@@ -86,7 +94,7 @@ class TaskSerializer(serializers.ModelSerializer):
 class TaskStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ("title","status",)
+        fields = ("status",)
 
 
 # NEW USER LOGIN

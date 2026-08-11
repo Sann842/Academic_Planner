@@ -48,13 +48,35 @@ class EventOwnershipTests(APITestCase):
         resp = self.client.get(f"/api/events/{self.event_a.id}/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_non_staff_non_owner_cannot_read_event_object_permission(self):
+        """
+        Regression test: IsOwnerOrReadOnly's SAFE_METHODS bypass is now
+        staff-only, not "any authenticated user". get_queryset() already
+        filters this case out (see test_user_cannot_see_other_users_events
+        and the 404 test above), so this is defense-in-depth - directly
+        exercises has_object_permission() with a non-owner, non-staff user
+        and an object that IS in scope, to make sure the permission class
+        itself denies read access rather than only relying on the queryset.
+        """
+        from api.calendar_app.permissions import IsOwnerOrReadOnly
+        from django.test import RequestFactory
+
+        permission = IsOwnerOrReadOnly()
+        request = RequestFactory().get("/api/events/1/")
+        request.user = self.user_b
+        self.assertFalse(
+            permission.has_object_permission(request, None, self.event_a)
+        )
+
     def test_user_cannot_edit_other_users_event(self):
-        # 404, not 403: get_queryset() already filters to only the user's
-        # own events, so user_b's queryset doesn't contain event_a at all.
-        # DRF's get_object() looks it up within that filtered queryset and
-        # finds nothing, so it 404s before has_object_permission() is even
-        # reached. This is arguably better privacy than a 403 would be - it
-        # doesn't confirm the event exists at all to a non-owner.
+        """
+        404, not 403: get_queryset() already filters to only the user's
+        own events, so user_b's queryset doesn't contain event_a at all.
+        DRF's get_object() looks it up within that filtered queryset and
+        finds nothing, so it 404s before has_object_permission() is even
+        reached. This is arguably better privacy than a 403 would be - it
+        doesn't confirm the event exists at all to a non-owner.
+        """
         self.client.force_authenticate(self.user_b)
         resp = self.client.patch(
             f"/api/events/{self.event_a.id}/", {"title": "Hijacked"}

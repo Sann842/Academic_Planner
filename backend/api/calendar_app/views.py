@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .permissions import IsAdminManageReadOnly, IsOwnerOrReadOnly, IsTaskOwner
@@ -17,15 +17,19 @@ from .serializers import (
 
 
 # AUTH: LOGIN VIEW
-# Uses MyTokenObtainPairSerializer so the issued JWT carries is_staff as a
-# real claim instead of the frontend guessing admin status from a username.
+"""
+Uses MyTokenObtainPairSerializer so the issued JWT carries is_staff as a
+real claim instead of the frontend guessing admin status from a username.
+"""
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
 # HOLIDAY VIEWSET
-# Admin can create/update/delete holidays
-# Normal users can only read holidays
+"""
+Admin can create/update/delete holidays
+Normal users can only read holidays
+"""
 class HolidayViewSet(viewsets.ModelViewSet):
     queryset = Holiday.objects.all().order_by("date_bs")
     serializer_class = HolidaySerializer
@@ -33,8 +37,10 @@ class HolidayViewSet(viewsets.ModelViewSet):
 
 
 # EVENT VIEWSET
-# Users can manage their own events
-# Admin can view all events
+"""
+Users can manage their own events
+Admin can view all events
+"""
 class EventViewSet(viewsets.ModelViewSet):
     # queryset = Event.objects.all().order_by("date_bs")
     serializer_class = EventSerializer
@@ -55,8 +61,10 @@ class EventViewSet(viewsets.ModelViewSet):
 
 
 # TASK VIEWSET
-# Users can manage tasks assigned to them
-# Admin can view all tasks
+"""
+Users can manage tasks assigned to them
+Admin can view all tasks
+"""
 class TaskViewSet(viewsets.ModelViewSet):
     # queryset = Task.objects.all().order_by("due_date_ad")
     serializer_class = TaskSerializer
@@ -71,10 +79,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(assigned_to=user).order_by("due_date_ad")
 
     def perform_create(self, serializer):
-        # Automatically assign the logged-in user, rather than trusting a
-        # client-supplied assigned_to (which would let any user assign
-        # tasks to someone else, and which the create form never sent
-        # anyway - see EventViewSet.perform_create for the same pattern).
+        """
+        Automatically assign the logged-in user, rather than trusting a
+        client-supplied assigned_to (which would let any user assign
+        tasks to someone else, and which the create form never sent
+        anyway - see EventViewSet.perform_create for the same pattern).
+        """
         serializer.save(assigned_to=self.request.user)
     
     # Update task status only
@@ -99,6 +109,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 # USER REGISTER
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():

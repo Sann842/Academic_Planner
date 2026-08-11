@@ -9,8 +9,10 @@ class HolidayAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     ordering = ("date_bs",)
     date_hierarchy = "date_ad"
-    # date_ad is auto-computed in Holiday.save() from date_bs - shown for
-    # reference but not directly editable here.
+    """
+    date_ad is auto-computed in Holiday.save() from date_bs - shown for
+    reference but not directly editable here.
+    """
     readonly_fields = ("date_ad",)
 
 

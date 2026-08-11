@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, CalendarDays, ListTodo, Star, Clock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { NepaliCalendarView } from "@/components/NepaliCalendarView";
+import { getTodayAdString } from "@/lib/utils";
 
 export default function Dashboard() {
   const { isAuthenticated, username } = useAuth();
@@ -21,12 +22,10 @@ export default function Dashboard() {
         const holidayData = await holidaysApi.getAll();
         
         // Filter to only show upcoming holidays (date_ad >= today)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = getTodayAdString();
         
         const upcomingHolidays = holidayData.filter((h: Holiday) => {
-          const holidayDate = new Date(h.date_ad);
-          return holidayDate >= today;
+          return h.date_ad >= today;
         });
         
         setAllHolidays(holidayData);
